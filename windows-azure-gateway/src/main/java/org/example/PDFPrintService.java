@@ -17,7 +17,7 @@ public class PDFPrintService { // ✅ Rename class to avoid conflict
         String fileType = "pdf";
         String userHome = System.getProperty("user.home");
         String localPath = userHome + "\\Downloads\\test." + fileType;
-        String targetPrinterName = "Your Printer Name"; // 🔁 Replace with actual printer name
+        String targetPrinterName = "HP408_POC_CIC_IRP"; // 🔁 Replace with actual printer name
 
         try {
             File pdfFile = new File(localPath);
