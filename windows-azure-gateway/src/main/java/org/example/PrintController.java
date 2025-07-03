@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.*;
 public class PrintController {
 
     @Autowired
-    private PrintService printService;
+    private PDFPrintService printService;
 
     @PostMapping("/job")
     public String printJob() {

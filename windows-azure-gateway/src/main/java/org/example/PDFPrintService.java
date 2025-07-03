@@ -5,16 +5,14 @@ import org.apache.pdfbox.rendering.PDFRenderer;
 import org.springframework.stereotype.Service;
 
 import javax.print.PrintServiceLookup;
-import javax.print.PrintService;
+import javax.print.PrintService; // ✅ Explicit import of Java's PrintService
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.print.*;
 import java.io.File;
 
 @Service
-public class PrintServiceImpl implements PrintService {
-
-    @Override
+public class PDFPrintService { // ✅ Rename class to avoid conflict
     public boolean printPDFToPrinter() {
         String fileType = "pdf";
         String userHome = System.getProperty("user.home");
@@ -32,7 +30,7 @@ public class PrintServiceImpl implements PrintService {
             PDFRenderer renderer = new PDFRenderer(document);
             BufferedImage image = renderer.renderImageWithDPI(0, 300);
 
-            PrintService[] services = PrintServiceLookup.lookupPrintServices(null, null);
+            PrintService[] services = PrintServiceLookup.lookupPrintServices(null, null); // ✅ now unambiguous
             PrintService selectedPrinter = null;
 
             for (PrintService service : services) {
