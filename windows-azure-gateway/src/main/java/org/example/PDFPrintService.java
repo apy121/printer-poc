@@ -5,36 +5,51 @@ import org.apache.pdfbox.rendering.PDFRenderer;
 import org.springframework.stereotype.Service;
 
 import javax.print.PrintServiceLookup;
-import javax.print.PrintService; // ✅ Explicit import of Java's PrintService
+import javax.print.PrintService;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.print.*;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 
 @Service
-public class PDFPrintService { // ✅ Rename class to avoid conflict
-    public boolean printPDFToPrinter() {
-        String fileType = "pdf";
-        String userHome = System.getProperty("user.home");
-        String localPath = userHome + "\\Downloads\\test." + fileType;
-        String targetPrinterName = "HP408_POC_CIC_IRP"; // 🔁 Replace with actual printer name
+public class PDFPrintService {
+    public boolean printPDFToPrinter(String fileId) {
+        String googleDownloadUrl = "https://drive.google.com/uc?export=download&id=" + fileId;
+        String tempFilePath = System.getProperty("java.io.tmpdir") + "/downloaded_file.pdf";
+        String targetPrinterName = "HP408_POC_CIC_IRP";
 
         try {
-            File pdfFile = new File(localPath);
+            // Step 1: Download the file
+            HttpURLConnection connection = (HttpURLConnection) new URL(googleDownloadUrl).openConnection();
+            connection.setRequestMethod("GET");
+
+            try (InputStream in = connection.getInputStream(); FileOutputStream out = new FileOutputStream(tempFilePath)) {
+                byte[] buffer = new byte[4096];
+                int bytesRead;
+                while ((bytesRead = in.read(buffer)) != -1) {
+                    out.write(buffer, 0, bytesRead);
+                }
+            }
+
+            File pdfFile = new File(tempFilePath);
             if (!pdfFile.exists()) {
-                System.err.println("File not found: " + localPath);
+                System.err.println("Downloaded file not found: " + tempFilePath);
                 return false;
             }
 
+            // Step 2: Load and render PDF
             PDDocument document = PDDocument.load(pdfFile);
             PDFRenderer renderer = new PDFRenderer(document);
             BufferedImage image = renderer.renderImageWithDPI(0, 300);
 
-            PrintService[] services = PrintServiceLookup.lookupPrintServices(null, null); // ✅ now unambiguous
+            // Step 3: Select printer
+            PrintService[] services = PrintServiceLookup.lookupPrintServices(null, null);
             PrintService selectedPrinter = null;
-
             for (PrintService service : services) {
-                System.out.println("Found printer: " + service.getName());
                 if (service.getName().equalsIgnoreCase(targetPrinterName)) {
                     selectedPrinter = service;
                     break;
@@ -47,9 +62,9 @@ public class PDFPrintService { // ✅ Rename class to avoid conflict
                 return false;
             }
 
+            // Step 4: Print logic
             PrinterJob job = PrinterJob.getPrinterJob();
             job.setPrintService(selectedPrinter);
-
             BufferedImage finalImage = image;
 
             job.setPrintable((Graphics g, PageFormat pf, int page) -> {
@@ -57,7 +72,6 @@ public class PDFPrintService { // ✅ Rename class to avoid conflict
 
                 Graphics2D g2d = (Graphics2D) g;
                 g2d.translate(pf.getImageableX(), pf.getImageableY());
-
                 double scaleX = pf.getImageableWidth() / finalImage.getWidth();
                 double scaleY = pf.getImageableHeight() / finalImage.getHeight();
                 double scale = Math.min(scaleX, scaleY);
