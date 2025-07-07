@@ -10,8 +10,8 @@ public class PrintController {
     private PDFPrintService printService;
 
     @PostMapping("/job")
-    public String printJob() {
-        boolean success = printService.printPDFToPrinter();
+    public String printJob(@RequestBody PrintRequest request) {
+        boolean success = printService.printPDFToPrinter(request.getFileId());
         return success ? "Print job submitted successfully." : "Print job failed.";
     }
 }
