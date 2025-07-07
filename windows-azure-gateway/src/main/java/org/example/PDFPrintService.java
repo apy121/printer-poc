@@ -4,49 +4,34 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.rendering.PDFRenderer;
 import org.springframework.stereotype.Service;
 
-import javax.print.PrintServiceLookup;
 import javax.print.PrintService;
+import javax.print.PrintServiceLookup;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.print.*;
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
 
 @Service
 public class PDFPrintService {
+
     public boolean printPDFToPrinter() {
-        String googleDownloadUrl = "https://drive.google.com/uc?export=download&id=" + "1jQy-SHyx3O4Bqej2Gac-4JfK8br2VxVAJnIvY-EDqjg";
-        String tempFilePath = System.getProperty("java.io.tmpdir") + "/downloaded_file.pdf";
+        // Modify this path if your Downloads folder is located elsewhere
+        String downloadsPath = System.getProperty("user.home") + "/Downloads/test.pdf";
         String targetPrinterName = "HP408_POC_CIC_IRP";
 
         try {
-            // Step 1: Download the file
-            HttpURLConnection connection = (HttpURLConnection) new URL(googleDownloadUrl).openConnection();
-            connection.setRequestMethod("GET");
-
-            try (InputStream in = connection.getInputStream(); FileOutputStream out = new FileOutputStream(tempFilePath)) {
-                byte[] buffer = new byte[4096];
-                int bytesRead;
-                while ((bytesRead = in.read(buffer)) != -1) {
-                    out.write(buffer, 0, bytesRead);
-                }
-            }
-
-            File pdfFile = new File(tempFilePath);
+            File pdfFile = new File(downloadsPath);
             if (!pdfFile.exists()) {
-                System.err.println("Downloaded file not found: " + tempFilePath);
+                System.err.println("File not found at: " + downloadsPath);
                 return false;
             }
 
-            // Step 2: Load and render PDF
+            // Step 1: Load and render PDF
             PDDocument document = PDDocument.load(pdfFile);
             PDFRenderer renderer = new PDFRenderer(document);
             BufferedImage image = renderer.renderImageWithDPI(0, 300);
 
-            // Step 3: Select printer
+            // Step 2: Select printer
             PrintService[] services = PrintServiceLookup.lookupPrintServices(null, null);
             PrintService selectedPrinter = null;
             for (PrintService service : services) {
@@ -62,7 +47,7 @@ public class PDFPrintService {
                 return false;
             }
 
-            // Step 4: Print logic
+            // Step 3: Print logic
             PrinterJob job = PrinterJob.getPrinterJob();
             job.setPrintService(selectedPrinter);
             BufferedImage finalImage = image;
