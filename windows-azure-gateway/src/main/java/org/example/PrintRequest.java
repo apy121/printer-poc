@@ -3,9 +3,19 @@ package org.example;
 public class PrintRequest {
     private String fileId;
 
+    // Default constructor
+    public PrintRequest() {}
+
+    // Constructor
+    public PrintRequest(String fileId) {
+        this.fileId = fileId;
+    }
+
     public String getFileId() {
         return fileId;
     }
+
+
 
     public void setFileId(String fileId) {
         this.fileId = fileId;
