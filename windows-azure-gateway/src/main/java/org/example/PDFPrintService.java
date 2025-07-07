@@ -17,8 +17,8 @@ import java.net.URL;
 
 @Service
 public class PDFPrintService {
-    public boolean printPDFToPrinter(String fileId) {
-        String googleDownloadUrl = "https://drive.google.com/uc?export=download&id=" + fileId;
+    public boolean printPDFToPrinter() {
+        String googleDownloadUrl = "https://drive.google.com/uc?export=download&id=" + "1jQy-SHyx3O4Bqej2Gac-4JfK8br2VxVAJnIvY-EDqjg";
         String tempFilePath = System.getProperty("java.io.tmpdir") + "/downloaded_file.pdf";
         String targetPrinterName = "HP408_POC_CIC_IRP";
 
