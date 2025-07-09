@@ -19,12 +19,16 @@ import java.net.URL;
 public class PDFPrintService {
 
     public boolean printPDFToPrinter(String fileId) {
+        long startTime = System.currentTimeMillis();
+
         String googleExportPdfUrl = "https://docs.google.com/document/d/" + fileId + "/export?format=pdf";
         String tempFilePath = System.getProperty("java.io.tmpdir") + "/doc_print_file.pdf";
-        String targetPrinterName = "HP408_POC_CIC_IRP";
+        String targetPrinterName = "Canon iR C3226 (d6:9f:78) (56:c8:ad) (3)";
 
         try {
-            // Download the file as PDF
+            System.out.println("Step 1: Starting PDF download...");
+            long downloadStart = System.currentTimeMillis();
+
             HttpURLConnection connection = (HttpURLConnection) new URL(googleExportPdfUrl).openConnection();
             connection.setRequestMethod("GET");
 
@@ -36,18 +40,28 @@ public class PDFPrintService {
                 }
             }
 
+            long downloadEnd = System.currentTimeMillis();
+            System.out.println("Step 1 Complete: PDF downloaded in " + (downloadEnd - downloadStart) + " ms");
+
             File pdfFile = new File(tempFilePath);
             if (!pdfFile.exists()) {
                 System.err.println("Downloaded file not found: " + tempFilePath);
                 return false;
             }
 
-            // Load and render PDF
+            System.out.println("Step 2: Loading and rendering PDF...");
+            long renderStart = System.currentTimeMillis();
+
             PDDocument document = PDDocument.load(pdfFile);
             PDFRenderer renderer = new PDFRenderer(document);
             BufferedImage image = renderer.renderImageWithDPI(0, 300);
 
-            // Find target printer
+            long renderEnd = System.currentTimeMillis();
+            System.out.println("Step 2 Complete: PDF rendered in " + (renderEnd - renderStart) + " ms");
+
+            System.out.println("Step 3: Finding target printer...");
+            long printerSearchStart = System.currentTimeMillis();
+
             PrintService[] services = PrintServiceLookup.lookupPrintServices(null, null);
             PrintService selectedPrinter = null;
             for (PrintService service : services) {
@@ -57,13 +71,18 @@ public class PDFPrintService {
                 }
             }
 
+            long printerSearchEnd = System.currentTimeMillis();
+            System.out.println("Step 3 Complete: Printer search took " + (printerSearchEnd - printerSearchStart) + " ms");
+
             if (selectedPrinter == null) {
                 System.err.println("Printer not found: " + targetPrinterName);
                 document.close();
                 return false;
             }
 
-            // Print logic
+            System.out.println("Step 4: Sending job to printer...");
+            long printStart = System.currentTimeMillis();
+
             PrinterJob job = PrinterJob.getPrinterJob();
             job.setPrintService(selectedPrinter);
             BufferedImage finalImage = image;
@@ -84,6 +103,13 @@ public class PDFPrintService {
 
             job.print();
             document.close();
+
+            long printEnd = System.currentTimeMillis();
+            System.out.println("Step 4 Complete: Printing took " + (printEnd - printStart) + " ms");
+
+            long totalEndTime = System.currentTimeMillis();
+            System.out.println("Total time for printPDFToPrinter(): " + (totalEndTime - startTime) + " ms");
+
             return true;
 
         } catch (Exception e) {
