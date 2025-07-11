@@ -1,6 +1,8 @@
 package org.example;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.printing.PDFPrintable;
+import org.apache.pdfbox.printing.Scaling;
 import org.apache.pdfbox.rendering.PDFRenderer;
 import org.springframework.stereotype.Service;
 import java.io.BufferedReader;
@@ -88,23 +90,29 @@ public class PDFPrintService {
 
             PrinterJob job = PrinterJob.getPrinterJob();
             job.setPrintService(selectedPrinter);
-            BufferedImage finalImage = image;
             job.setCopies(1);
 
-            job.setPrintable((Graphics g, PageFormat pf, int page) -> {
-                if (page > 0) return Printable.NO_SUCH_PAGE;
+// Create a PageFormat and set to portrait
+            PageFormat pageFormat = job.defaultPage();
+            pageFormat.setOrientation(PageFormat.PORTRAIT);
 
-                Graphics2D g2d = (Graphics2D) g;
-                g2d.translate(pf.getImageableX(), pf.getImageableY());
-                double scaleX = pf.getImageableWidth() / finalImage.getWidth();
-                double scaleY = pf.getImageableHeight() / finalImage.getHeight();
-                double scale = Math.min(scaleX, scaleY);
+            // Adjust paper size to A4
+            Paper paper = new Paper();
+            double inch = 72; // 1 inch = 72 points
+            double width = 8.27 * inch;   // A4 width in points
+            double height = 11.69 * inch; // A4 height in points
 
-                g2d.scale(scale, scale);
-                g2d.drawImage(finalImage, 0, 0, null);
-                return Printable.PAGE_EXISTS;
-            });
+            // Set the paper size and imageable area (leave 0.5 inch margin)
+            paper.setSize(width, height);
+            paper.setImageableArea(36, 36, width - 72, height - 72); // 0.5 inch margins
+            pageFormat.setPaper(paper);
 
+            // Create a Book with this format and the printable
+            Book book = new Book();
+            PDFPrintable printable = new PDFPrintable(document, Scaling.SHRINK_TO_FIT, false); // false = do not rotate landscape
+            book.append(printable, pageFormat, document.getNumberOfPages());
+
+            job.setPageable(book);
             job.print();
             document.close();
 
