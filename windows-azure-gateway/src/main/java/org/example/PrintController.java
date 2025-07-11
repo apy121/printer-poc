@@ -25,6 +25,25 @@ public class PrintController {
                 ResponseEntity.status(500).body("Print job failed.");
     }
 
+
+    @GetMapping("/printers")
+    public ResponseEntity<?> getAllPrinters() {
+        return ResponseEntity.ok(printService.getAllPrinters());
+    }
+
+    @GetMapping("/printers/detailed")
+    public ResponseEntity<?> getDetailedPrinters() {
+        return ResponseEntity.ok(printService.getDetailedPrintersInfo());
+    }
+
+
+    @GetMapping("/job/status/{jobId}")
+    public ResponseEntity<?> getPrintJobStatus(@PathVariable String jobId) {
+        String status = printService.getPrintJobStatusFromCUPS(jobId);
+        return ResponseEntity.ok(status);
+    }
+
+
     // Add a simple health check endpoint
     @GetMapping("/health")
     public String health() {

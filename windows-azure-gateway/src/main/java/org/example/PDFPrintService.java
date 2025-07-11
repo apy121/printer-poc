@@ -3,10 +3,13 @@ package org.example;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.rendering.PDFRenderer;
 import org.springframework.stereotype.Service;
-
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import javax.print.PrintService;
 import javax.print.PrintServiceLookup;
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.awt.image.BufferedImage;
 import java.awt.print.*;
 import java.io.File;
@@ -86,6 +89,7 @@ public class PDFPrintService {
             PrinterJob job = PrinterJob.getPrinterJob();
             job.setPrintService(selectedPrinter);
             BufferedImage finalImage = image;
+            job.setCopies(1);
 
             job.setPrintable((Graphics g, PageFormat pf, int page) -> {
                 if (page > 0) return Printable.NO_SUCH_PAGE;
@@ -115,6 +119,66 @@ public class PDFPrintService {
         } catch (Exception e) {
             e.printStackTrace();
             return false;
+        }
+    }
+
+    public String getPrintJobStatusFromCUPS(String jobId) {
+        try {
+            ProcessBuilder pb = new ProcessBuilder("curl", "http://localhost:9191/jobs/" + jobId);
+            Process process = pb.start();
+
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            StringBuilder output = new StringBuilder();
+            String line;
+
+            while ((line = reader.readLine()) != null) {
+                output.append(line).append("\n");
+            }
+
+            int exitCode = process.waitFor();
+            if (exitCode == 0) {
+                return output.toString();
+            } else {
+                return "Failed to fetch job status. Exit code: " + exitCode;
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "Error while getting job status: " + e.getMessage();
+        }
+    }
+
+    public List<String> getAllPrinters() {
+        List<String> printers = new ArrayList<>();
+        PrintService[] services = PrintServiceLookup.lookupPrintServices(null, null);
+        for (PrintService service : services) {
+            printers.add(service.getName());
+        }
+        return printers;
+    }
+
+    public String getDetailedPrintersInfo() {
+        try {
+            ProcessBuilder builder = new ProcessBuilder(
+                    "powershell.exe",
+                    "-Command",
+                    "Get-Printer | Select-Object Name,ShareName,Location,DriverName,PortName,Comment,PrinterStatus | ConvertTo-Json"
+            );
+            builder.redirectErrorStream(true);
+            Process process = builder.start();
+
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            StringBuilder result = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                result.append(line);
+            }
+
+            process.waitFor();
+            return result.toString();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "Failed to get printer details: " + e.getMessage();
         }
     }
 }
