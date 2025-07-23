@@ -3,30 +3,29 @@ package org.example;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-import java.io.IOException;
 
 @RestController
-@RequestMapping("/api/v1/print")
+@RequestMapping("/api/v1/print")  // Base path
 public class PrintController {
 
     @Autowired
     private PDFPrintService printService;
 
-    @PostMapping(value = "/job", consumes = "multipart/form-data")
-    public ResponseEntity<String> printJob(@RequestParam("file") MultipartFile file) {
-        if (file == null || file.isEmpty()) {
-            return ResponseEntity.badRequest().body("PDF file is required");
+    @PostMapping("/job")
+    public ResponseEntity<String> printJob(@RequestBody PrintRequest request) {
+        System.out.println("Received request: printerName=" + request.getPrinterName());
+
+        if (request.getFileData() == null || request.getFileData().length == 0) {
+            return ResponseEntity.badRequest().body("fileData is required");
+        }
+        if (request.getPrinterName() == null || request.getPrinterName().isEmpty()) {
+            return ResponseEntity.badRequest().body("printerName is required");
         }
 
-        try {
-            boolean success = printService.printPDFToPrinter(file.getInputStream());
-            return success ?
-                    ResponseEntity.ok("Print job submitted successfully.") :
-                    ResponseEntity.status(500).body("Print job failed.");
-        } catch (IOException e) {
-            return ResponseEntity.status(500).body("Error processing file: " + e.getMessage());
-        }
+        boolean success = printService.printPDFToPrinter(request.getFileData(), request.getPrinterName());
+        return success ?
+                ResponseEntity.ok("Print job submitted successfully.") :
+                ResponseEntity.status(500).body("Print job failed.");
     }
 
     @GetMapping("/printers")
@@ -45,6 +44,7 @@ public class PrintController {
         return ResponseEntity.ok(status);
     }
 
+    // Add a simple health check endpoint
     @GetMapping("/health")
     public String health() {
         return "Application is running!";

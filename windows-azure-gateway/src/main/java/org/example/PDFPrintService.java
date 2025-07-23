@@ -9,6 +9,7 @@ import javax.print.PrintService;
 import javax.print.PrintServiceLookup;
 import java.awt.image.BufferedImage;
 import java.awt.print.*;
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,11 +19,10 @@ import java.io.InputStreamReader;
 @Service
 public class PDFPrintService {
 
-    public boolean printPDFToPrinter(InputStream pdfStream) {
+    public boolean printPDFToPrinter(byte[] fileData, String printerName) {
         long startTime = System.currentTimeMillis();
-        String targetPrinterName = "Canon iR C3226 (d6:9f:78) (56:c8:ad) (3)";
 
-        try {
+        try (InputStream pdfStream = new ByteArrayInputStream(fileData)) {
             System.out.println("Step 1: Loading PDF from stream...");
             long loadStart = System.currentTimeMillis();
 
@@ -46,7 +46,7 @@ public class PDFPrintService {
             PrintService[] services = PrintServiceLookup.lookupPrintServices(null, null);
             PrintService selectedPrinter = null;
             for (PrintService service : services) {
-                if (service.getName().equalsIgnoreCase(targetPrinterName)) {
+                if (service.getName().equalsIgnoreCase(printerName)) {
                     selectedPrinter = service;
                     break;
                 }
@@ -56,7 +56,7 @@ public class PDFPrintService {
             System.out.println("Step 3 Complete: Printer search took " + (printerSearchEnd - printerSearchStart) + " ms");
 
             if (selectedPrinter == null) {
-                System.err.println("Printer not found: " + targetPrinterName);
+                System.err.println("Printer not found: " + printerName);
                 document.close();
                 return false;
             }
