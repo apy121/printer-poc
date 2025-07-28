@@ -13,18 +13,20 @@ public class PrintController {
 
     @PostMapping("/job")
     public ResponseEntity<String> printJob(@RequestBody PrintRequest request) {
-        System.out.println("Received request: " + request.getFileId());
+        System.out.println("Received request: printerName=" + request.getPrinterName());
 
-        if (request.getFileId() == null || request.getFileId().isEmpty()) {
-            return ResponseEntity.badRequest().body("FileId is required");
+        if (request.getFileData() == null || request.getFileData().length == 0) {
+            return ResponseEntity.badRequest().body("fileData is required");
+        }
+        if (request.getPrinterName() == null || request.getPrinterName().isEmpty()) {
+            return ResponseEntity.badRequest().body("printerName is required");
         }
 
-        boolean success = printService.printPDFToPrinter(request.getFileId());
+        boolean success = printService.printPDFToPrinter(request.getFileData(), request.getPrinterName());
         return success ?
                 ResponseEntity.ok("Print job submitted successfully.") :
                 ResponseEntity.status(500).body("Print job failed.");
     }
-
 
     @GetMapping("/printers")
     public ResponseEntity<?> getAllPrinters() {
@@ -36,13 +38,11 @@ public class PrintController {
         return ResponseEntity.ok(printService.getDetailedPrintersInfo());
     }
 
-
     @GetMapping("/job/status/{jobId}")
     public ResponseEntity<?> getPrintJobStatus(@PathVariable String jobId) {
         String status = printService.getPrintJobStatusFromCUPS(jobId);
         return ResponseEntity.ok(status);
     }
-
 
     // Add a simple health check endpoint
     @GetMapping("/health")

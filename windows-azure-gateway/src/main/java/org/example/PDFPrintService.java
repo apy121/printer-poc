@@ -5,59 +5,35 @@ import org.apache.pdfbox.printing.PDFPrintable;
 import org.apache.pdfbox.printing.Scaling;
 import org.apache.pdfbox.rendering.PDFRenderer;
 import org.springframework.stereotype.Service;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import javax.print.PrintService;
 import javax.print.PrintServiceLookup;
-import java.awt.*;
-import java.util.ArrayList;
-import java.util.List;
 import java.awt.image.BufferedImage;
 import java.awt.print.*;
-import java.io.File;
-import java.io.FileOutputStream;
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 
 @Service
 public class PDFPrintService {
 
-    public boolean printPDFToPrinter(String fileId) {
+    public boolean printPDFToPrinter(byte[] fileData, String printerName) {
         long startTime = System.currentTimeMillis();
 
-        String googleExportPdfUrl = "https://docs.google.com/document/d/" + fileId + "/export?format=pdf";
-        String tempFilePath = System.getProperty("java.io.tmpdir") + "/doc_print_file.pdf";
-        String targetPrinterName = "Canon iR C3226 (d6:9f:78) (56:c8:ad) (3)";
+        try (InputStream pdfStream = new ByteArrayInputStream(fileData)) {
+            System.out.println("Step 1: Loading PDF from stream...");
+            long loadStart = System.currentTimeMillis();
 
-        try {
-            System.out.println("Step 1: Starting PDF download...");
-            long downloadStart = System.currentTimeMillis();
+            PDDocument document = PDDocument.load(pdfStream);
 
-            HttpURLConnection connection = (HttpURLConnection) new URL(googleExportPdfUrl).openConnection();
-            connection.setRequestMethod("GET");
+            long loadEnd = System.currentTimeMillis();
+            System.out.println("Step 1 Complete: PDF loaded in " + (loadEnd - loadStart) + " ms");
 
-            try (InputStream in = connection.getInputStream(); FileOutputStream out = new FileOutputStream(tempFilePath)) {
-                byte[] buffer = new byte[4096];
-                int bytesRead;
-                while ((bytesRead = in.read(buffer)) != -1) {
-                    out.write(buffer, 0, bytesRead);
-                }
-            }
-
-            long downloadEnd = System.currentTimeMillis();
-            System.out.println("Step 1 Complete: PDF downloaded in " + (downloadEnd - downloadStart) + " ms");
-
-            File pdfFile = new File(tempFilePath);
-            if (!pdfFile.exists()) {
-                System.err.println("Downloaded file not found: " + tempFilePath);
-                return false;
-            }
-
-            System.out.println("Step 2: Loading and rendering PDF...");
+            System.out.println("Step 2: Rendering PDF...");
             long renderStart = System.currentTimeMillis();
 
-            PDDocument document = PDDocument.load(pdfFile);
             PDFRenderer renderer = new PDFRenderer(document);
             BufferedImage image = renderer.renderImageWithDPI(0, 300);
 
@@ -70,7 +46,7 @@ public class PDFPrintService {
             PrintService[] services = PrintServiceLookup.lookupPrintServices(null, null);
             PrintService selectedPrinter = null;
             for (PrintService service : services) {
-                if (service.getName().equalsIgnoreCase(targetPrinterName)) {
+                if (service.getName().equalsIgnoreCase(printerName)) {
                     selectedPrinter = service;
                     break;
                 }
@@ -80,7 +56,7 @@ public class PDFPrintService {
             System.out.println("Step 3 Complete: Printer search took " + (printerSearchEnd - printerSearchStart) + " ms");
 
             if (selectedPrinter == null) {
-                System.err.println("Printer not found: " + targetPrinterName);
+                System.err.println("Printer not found: " + printerName);
                 document.close();
                 return false;
             }
@@ -92,24 +68,20 @@ public class PDFPrintService {
             job.setPrintService(selectedPrinter);
             job.setCopies(1);
 
-// Create a PageFormat and set to portrait
             PageFormat pageFormat = job.defaultPage();
             pageFormat.setOrientation(PageFormat.PORTRAIT);
 
-            // Adjust paper size to A4
             Paper paper = new Paper();
-            double inch = 72; // 1 inch = 72 points
-            double width = 8.27 * inch;   // A4 width in points
-            double height = 11.69 * inch; // A4 height in points
+            double inch = 72;
+            double width = 8.27 * inch;
+            double height = 11.69 * inch;
 
-            // Set the paper size and imageable area (leave 0.5 inch margin)
             paper.setSize(width, height);
-            paper.setImageableArea(36, 36, width - 72, height - 72); // 0.5 inch margins
+            paper.setImageableArea(36, 36, width - 72, height - 72);
             pageFormat.setPaper(paper);
 
-            // Create a Book with this format and the printable
             Book book = new Book();
-            PDFPrintable printable = new PDFPrintable(document, Scaling.SHRINK_TO_FIT, false); // false = do not rotate landscape
+            PDFPrintable printable = new PDFPrintable(document, Scaling.SHRINK_TO_FIT, false);
             book.append(printable, pageFormat, document.getNumberOfPages());
 
             job.setPageable(book);

@@ -1,24 +1,34 @@
 package org.example;
 
+import java.util.Arrays;
+
 public class PrintRequest {
-    private String fileId;
+    private byte[] fileData;
+    private String printerName;
 
     // Default constructor
     public PrintRequest() {}
 
     // Constructor
-    public PrintRequest(String fileId) {
-        this.fileId = fileId;
+    public PrintRequest(byte[] fileData, String printerName) {
+        this.fileData = fileData != null ? fileData.clone() : null;
+        this.printerName = printerName;
     }
 
-    public String getFileId() {
-        return fileId;
+    public byte[] getFileData() {
+        return fileData != null ? fileData.clone() : null;
     }
 
+    public void setFileData(byte[] fileData) {
+        this.fileData = fileData != null ? fileData.clone() : null;
+    }
 
+    public String getPrinterName() {
+        return printerName;
+    }
 
-    public void setFileId(String fileId) {
-        this.fileId = fileId;
+    public void setPrinterName(String printerName) {
+        this.printerName = printerName;
     }
 }
 
