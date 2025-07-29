@@ -49,4 +49,6 @@ public class PrintRequest {
 //# Step 3: Send using curl.exe
 //curl.exe -X POST http://localhost:9100/api/v1/print/job `
 //        -H "Content-Type: application/json" `
-//        --data "@$tempFile"
+//        --data "@$tempFile" `
+//        -w "Total response time: %{time_total}s`n"
+
