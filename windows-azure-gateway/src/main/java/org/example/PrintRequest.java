@@ -48,3 +48,5 @@ public class PrintRequest {
 //        "fileData": "'"$(base64 -i ~/Downloads/test.pdf)"'",
 //        "printerName": "My_Printer_Name"
 //        }'
+
+// curl -X POST http://localhost:8080/job -H "Content-Type: application/json" -d '{"fileData":"'"$(base64 -i ~/Downloads/test.pdf)"'","printerName":"My_Printer_Name"}'
