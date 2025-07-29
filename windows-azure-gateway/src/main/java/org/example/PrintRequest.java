@@ -50,3 +50,5 @@ public class PrintRequest {
 //        }'
 
 // curl -X POST http://localhost:8080/job -H "Content-Type: application/json" -d '{"fileData":"'"$(base64 -i ~/Downloads/test.pdf)"'","printerName":"My_Printer_Name"}'
+
+// curl -Uri http://localhost:9100/job -Method POST -Headers @{"Content-Type"="application/json"} -Body (@{fileData = [Convert]::ToBase64String([IO.File]::ReadAllBytes("$env:USERPROFILE\Downloads\test.pdf")); printerName = "My_Printer_Name"} | ConvertTo-Json -Compress)
