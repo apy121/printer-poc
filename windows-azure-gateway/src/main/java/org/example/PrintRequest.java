@@ -32,8 +32,21 @@ public class PrintRequest {
     }
 }
 
+//# Step 1: Convert PDF to Base64
 //$filePath = "$env:USERPROFILE\Downloads\test.pdf"
 //$base64 = [Convert]::ToBase64String([IO.File]::ReadAllBytes($filePath))
-//$json = "{`"fileData`": `"$base64`", `"printerName`": `"My_Printer_Name`"}"
 //
-//curl.exe -X POST http://localhost:9100/api/v1/print/job -H "Content-Type: application/json" -d "$json"
+//        # Step 2: Prepare JSON body and write to temp file
+//$json = @{
+//    fileData = $base64
+//    printerName = "My_Printer_Name"
+//} | ConvertTo-Json -Compress
+//
+//# Save JSON to a file
+//        $tempFile = "$env:TEMP\printjob.json"
+//Set-Content -Path $tempFile -Value $json -Encoding UTF8
+//
+//# Step 3: Send using curl.exe
+//curl.exe -X POST http://localhost:9100/api/v1/print/job `
+//        -H "Content-Type: application/json" `
+//        --data "@$tempFile"
