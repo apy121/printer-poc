@@ -39,7 +39,7 @@ public class PrintRequest {
 //        # Step 2: Prepare JSON body and write to temp file
 //$json = @{
 //    fileData = $base64
-//    printerName = "My_Printer_Name"
+//    printerName = "HP408_POC_CIC_IRP"
 //} | ConvertTo-Json -Compress
 //
 //# Save JSON to a file
