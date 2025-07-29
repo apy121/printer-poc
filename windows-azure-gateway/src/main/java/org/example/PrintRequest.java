@@ -40,3 +40,11 @@ public class PrintRequest {
 // echo '{"fieldId": "1jQy-SHyx3O4Bqej2Gac-4JfK8br2VxVAJnIvY-EDqjg"}' > payload.json
 
 // curl -X POST http://localhost:9100/api/v1/print/job -H "Content-Type: application/json" -d "{\"fileId\": \"1jQy-SHyx3O4Bqej2Gac-4JfK8br2VxVAJnIvY-EDqjg\"}"
+
+
+//curl -X POST http://localhost:8080/job \
+//        -H "Content-Type: application/json" \
+//        -d '{
+//        "fileData": "'"$(base64 -i ~/Downloads/test.pdf)"'",
+//        "printerName": "My_Printer_Name"
+//        }'
