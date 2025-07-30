@@ -22,24 +22,24 @@ public class PDFPrintService {
         long startTime = System.currentTimeMillis();
 
         try (InputStream pdfStream = new ByteArrayInputStream(fileData)) {
-            System.out.println("Step 1: Loading PDF from stream...");
+            System.out.println("Step 2: Loading PDF from stream...");
             long loadStart = System.currentTimeMillis();
 
             PDDocument document = PDDocument.load(pdfStream);
 
             long loadEnd = System.currentTimeMillis();
-            System.out.println("Step 1 Complete: PDF loaded in " + (loadEnd - loadStart) + " ms");
+            System.out.println("Step 2 Complete: PDF loaded in " + (loadEnd - loadStart) + " ms");
 
-            System.out.println("Step 2: Rendering PDF...");
+            System.out.println("Step 3: Rendering PDF...");
             long renderStart = System.currentTimeMillis();
 
             PDFRenderer renderer = new PDFRenderer(document);
             BufferedImage image = renderer.renderImageWithDPI(0, 300);
 
             long renderEnd = System.currentTimeMillis();
-            System.out.println("Step 2 Complete: PDF rendered in " + (renderEnd - renderStart) + " ms");
+            System.out.println("Step 3 Complete: PDF rendered in " + (renderEnd - renderStart) + " ms");
 
-            System.out.println("Step 3: Finding target printer...");
+            System.out.println("Step 4: Finding target printer...");
             long printerSearchStart = System.currentTimeMillis();
 
             PrintService[] services = PrintServiceLookup.lookupPrintServices(null, null);
@@ -52,7 +52,7 @@ public class PDFPrintService {
             }
 
             long printerSearchEnd = System.currentTimeMillis();
-            System.out.println("Step 3 Complete: Printer search took " + (printerSearchEnd - printerSearchStart) + " ms");
+            System.out.println("Step 4 Complete: Printer search took " + (printerSearchEnd - printerSearchStart) + " ms");
 
             if (selectedPrinter == null) {
                 System.err.println("Printer not found: " + printerName);
@@ -60,7 +60,7 @@ public class PDFPrintService {
                 return false;
             }
 
-            System.out.println("Step 4: Sending job to printer...");
+            System.out.println("Step 5: Sending job to printer...");
             long printStart = System.currentTimeMillis();
 
             PrinterJob job = PrinterJob.getPrinterJob();
@@ -85,7 +85,7 @@ public class PDFPrintService {
             document.close();
 
             long printEnd = System.currentTimeMillis();
-            System.out.println("Step 4 Complete: Printing took " + (printEnd - printStart) + " ms");
+            System.out.println("Step 5 Complete: Printing took " + (printEnd - printStart) + " ms");
 
             long totalEndTime = System.currentTimeMillis();
             System.out.println("Total time for printPDFToPrinter(): " + (totalEndTime - startTime) + " ms");
