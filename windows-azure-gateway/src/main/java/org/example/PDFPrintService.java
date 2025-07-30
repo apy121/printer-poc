@@ -7,6 +7,7 @@ import org.apache.pdfbox.rendering.PDFRenderer;
 import org.springframework.stereotype.Service;
 import javax.print.PrintService;
 import javax.print.PrintServiceLookup;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.print.*;
 import java.io.ByteArrayInputStream;
@@ -66,25 +67,22 @@ public class PDFPrintService {
 
             PrinterJob job = PrinterJob.getPrinterJob();
             job.setPrintService(selectedPrinter);
-            job.setCopies(1);
+            BufferedImage finalImage = image;
 
-            PageFormat pageFormat = job.defaultPage();
-            pageFormat.setOrientation(PageFormat.PORTRAIT);
+            job.setPrintable((Graphics g, PageFormat pf, int page) -> {
+                if (page > 0) return Printable.NO_SUCH_PAGE;
 
-            Paper paper = new Paper();
-            double inch = 72;
-            double width = 8.27 * inch;
-            double height = 11.69 * inch;
+                Graphics2D g2d = (Graphics2D) g;
+                g2d.translate(pf.getImageableX(), pf.getImageableY());
+                double scaleX = pf.getImageableWidth() / finalImage.getWidth();
+                double scaleY = pf.getImageableHeight() / finalImage.getHeight();
+                double scale = Math.min(scaleX, scaleY);
 
-            paper.setSize(width, height);
-            paper.setImageableArea(36, 36, width - 72, height - 72);
-            pageFormat.setPaper(paper);
+                g2d.scale(scale, scale);
+                g2d.drawImage(finalImage, 0, 0, null);
+                return Printable.PAGE_EXISTS;
+            });
 
-            Book book = new Book();
-            PDFPrintable printable = new PDFPrintable(document, Scaling.SHRINK_TO_FIT, false);
-            book.append(printable, pageFormat, document.getNumberOfPages());
-
-            job.setPageable(book);
             job.print();
             document.close();
 
