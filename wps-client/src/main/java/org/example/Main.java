@@ -27,8 +27,8 @@ public class Main {
         String tempFilePath = System.getProperty("java.io.tmpdir") + File.separator + "printDoc.pdf";
         String postscriptPath = System.getProperty("java.io.tmpdir") + File.separator + "printDoc.ps";
 
-        String printerShare = "smb://172.16.15.136/AdminCabin";
-        String domain = "dpworldpc";
+        String printerShare = "smb://172.16.14.252/AdminCabin";
+        String domain = "dpworld";
         String username = "dpworldpc";
         String password = "asdasd";
 
