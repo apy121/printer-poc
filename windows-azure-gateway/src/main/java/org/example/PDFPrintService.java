@@ -30,16 +30,7 @@ public class PDFPrintService {
             long loadEnd = System.currentTimeMillis();
             System.out.println("Step 1 Complete: PDF loaded in " + (loadEnd - loadStart) + " ms");
 
-            System.out.println("Step 2: Rendering PDF...");
-            long renderStart = System.currentTimeMillis();
-
-            PDFRenderer renderer = new PDFRenderer(document);
-            BufferedImage image = renderer.renderImageWithDPI(0, 300);
-
-            long renderEnd = System.currentTimeMillis();
-            System.out.println("Step 2 Complete: PDF rendered in " + (renderEnd - renderStart) + " ms");
-
-            System.out.println("Step 3: Finding target printer...");
+            System.out.println("Step 2: Finding target printer...");
             long printerSearchStart = System.currentTimeMillis();
 
             PrintService[] services = PrintServiceLookup.lookupPrintServices(null, null);
@@ -52,7 +43,7 @@ public class PDFPrintService {
             }
 
             long printerSearchEnd = System.currentTimeMillis();
-            System.out.println("Step 3 Complete: Printer search took " + (printerSearchEnd - printerSearchStart) + " ms");
+            System.out.println("Step 2 Complete: Printer search took " + (printerSearchEnd - printerSearchStart) + " ms");
 
             if (selectedPrinter == null) {
                 System.err.println("Printer not found: " + printerName);
@@ -60,32 +51,42 @@ public class PDFPrintService {
                 return false;
             }
 
-            System.out.println("Step 4: Sending job to printer...");
+            System.out.println("Step 3: Sending job to printer...");
             long printStart = System.currentTimeMillis();
+
+            PDFRenderer renderer = new PDFRenderer(document);
+            int numberOfPages = document.getNumberOfPages();
 
             PrinterJob job = PrinterJob.getPrinterJob();
             job.setPrintService(selectedPrinter);
-            BufferedImage finalImage = image;
 
             job.setPrintable((Graphics g, PageFormat pf, int page) -> {
-                if (page > 0) return Printable.NO_SUCH_PAGE;
+                if (page >= numberOfPages) {
+                    return Printable.NO_SUCH_PAGE;
+                }
 
-                Graphics2D g2d = (Graphics2D) g;
-                g2d.translate(pf.getImageableX(), pf.getImageableY());
-                double scaleX = pf.getImageableWidth() / finalImage.getWidth();
-                double scaleY = pf.getImageableHeight() / finalImage.getHeight();
-                double scale = Math.min(scaleX, scaleY);
+                try {
+                    BufferedImage image = renderer.renderImageWithDPI(page, 300);
+                    Graphics2D g2d = (Graphics2D) g;
+                    g2d.translate(pf.getImageableX(), pf.getImageableY());
+                    double scaleX = pf.getImageableWidth() / image.getWidth();
+                    double scaleY = pf.getImageableHeight() / image.getHeight();
+                    double scale = Math.min(scaleX, scaleY);
 
-                g2d.scale(scale, scale);
-                g2d.drawImage(finalImage, 0, 0, null);
-                return Printable.PAGE_EXISTS;
+                    g2d.scale(scale, scale);
+                    g2d.drawImage(image, 0, 0, null);
+                    return Printable.PAGE_EXISTS;
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    return Printable.NO_SUCH_PAGE;
+                }
             });
 
             job.print();
             document.close();
 
             long printEnd = System.currentTimeMillis();
-            System.out.println("Step 4 Complete: Printing took " + (printEnd - printStart) + " ms");
+            System.out.println("Step 3 Complete: Printing took " + (printEnd - printStart) + " ms");
 
             long totalEndTime = System.currentTimeMillis();
             System.out.println("Total time for printPDFToPrinter(): " + (totalEndTime - startTime) + " ms");
