@@ -13,8 +13,10 @@ public class PrintController {
 
     @PostMapping("/job")
     public ResponseEntity<String> printJob(@RequestBody PrintRequest request) {
+        if (request == null) {
+            return ResponseEntity.badRequest().body("request body is required");
+        }
         System.out.println("Received request: printerName=" + request.getPrinterName());
-
         if (request.getFileData() == null || request.getFileData().length == 0) {
             return ResponseEntity.badRequest().body("fileData is required");
         }
@@ -22,10 +24,17 @@ public class PrintController {
             return ResponseEntity.badRequest().body("printerName is required");
         }
 
-        boolean success = printService.printPDFToPrinter(request.getFileData(), request.getPrinterName());
-        return success ?
-                ResponseEntity.ok("Print job submitted successfully.") :
-                ResponseEntity.status(500).body("Print job failed.");
+        try {
+            printService.printPDFToPrinter(request.getFileData(), request.getPrinterName());
+            return ResponseEntity.ok("Print job submitted successfully.");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(404).body(e.getMessage());
+        } catch (RuntimeException e) {
+            String errorMessage = e.getCause() != null && e.getCause().getMessage() != null
+                    ? e.getCause().getMessage()
+                    : e.getMessage();
+            return ResponseEntity.status(500).body(errorMessage);
+        }
     }
 
     @GetMapping("/printers")
